@@ -20,15 +20,15 @@ public class ReceiverDAO {
 
     public List<Receiver> getAllReceivers() {
         List<Receiver> receivers = new ArrayList<>();
-        String sql = "SELECT * FROM Receiver";
-        try (Statement stmt = connection.createStatement()) {
-            ResultSet rs = stmt.executeQuery(sql);
+        String sql = "SELECT userID, name, contactNumber, address FROM Users WHERE role = 'Receiver'";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                int receiverID = rs.getInt("receiverID");
+                int userID = rs.getInt("userID");
                 String name = rs.getString("name");
                 String contactNumber = rs.getString("contactNumber");
                 String address = rs.getString("address");
-                Receiver receiver = new Receiver(receiverID, name, contactNumber, address);
+                Receiver receiver = new Receiver(userID, name, contactNumber, address);
                 receivers.add(receiver);
             }
         } catch (SQLException e) {
@@ -37,10 +37,11 @@ public class ReceiverDAO {
         return receivers;
     }
 
-    public boolean receiverExists(int receiverID) {
-        String sql = "SELECT 1 FROM Receiver WHERE receiverID = ?";
+
+    public boolean receiverExists(int userID) {
+        String sql = "SELECT 1 FROM Users WHERE userID = ? AND role = 'Receiver'";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, receiverID);
+            stmt.setInt(1, userID);
             ResultSet rs = stmt.executeQuery();
             return rs.next();
         } catch (SQLException e) {
@@ -48,4 +49,5 @@ public class ReceiverDAO {
             return false;
         }
     }
+
 }

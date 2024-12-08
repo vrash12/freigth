@@ -6,10 +6,11 @@ public class Sender extends Person {
 
     public Sender() {}
 
-    public Sender(int customerID, String name, String address, String contactNumber) {
+    public Sender(int customerID, String name, String contactNumber, String address) {
         super(name, address, contactNumber);
         this.customerID = customerID;
     }
+
 
     // Getters and Setters
     public int getCustomerID() {

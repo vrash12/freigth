@@ -19,8 +19,8 @@ public class ShipmentDAO {
     }
 
     public void createShipment(Shipment shipment) {
-        String sql = "INSERT INTO Shipment (senderID, receiverID, busID, branchID, weight, dimensions, status, cost) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO Shipment (senderID, receiverID, busID, branchID, weight, dimensions, status, cost, trackingNumber) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, shipment.getSenderID());
             stmt.setInt(2, shipment.getReceiverID());
@@ -30,20 +30,47 @@ public class ShipmentDAO {
             stmt.setString(6, shipment.getDimensions());
             stmt.setString(7, shipment.getStatus());
             stmt.setDouble(8, shipment.getCost());
-            stmt.executeUpdate();
+            // Ensure trackingNumber is set before insertion
+            if (shipment.getTrackingNumber() == null || shipment.getTrackingNumber().isEmpty()) {
+                shipment.setTrackingNumber(shipment.generateTrackingNumber());
+            }
+            stmt.setString(9, shipment.getTrackingNumber());
 
-            // Retrieve generated shipmentID
+            stmt.executeUpdate();
             ResultSet rs = stmt.getGeneratedKeys();
             if (rs.next()) {
                 shipment.setShipmentID(rs.getInt(1));
             }
 
-            System.out.println("Shipment created successfully. Shipment ID: " + shipment.getShipmentID());
+            System.out.println("Shipment created successfully. Tracking Number: " + shipment.getTrackingNumber());
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
+    public Shipment getShipmentByTrackingNumber(String trackingNumber) {
+        String sql = "SELECT * FROM Shipment WHERE trackingNumber = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, trackingNumber);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                int shipmentID = rs.getInt("shipmentID");
+                int senderID = rs.getInt("senderID");
+                int receiverID = rs.getInt("receiverID");
+                int busID = rs.getInt("busID");
+                int branchID = rs.getInt("branchID");
+                double weight = rs.getDouble("weight");
+                String dimensions = rs.getString("dimensions");
+                String status = rs.getString("status");
+                double cost = rs.getDouble("cost");
+                String tNumber = rs.getString("trackingNumber");
+                return new Shipment(shipmentID, senderID, receiverID, busID, branchID, weight, dimensions, status, cost, tNumber);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
     public boolean shipmentExists(int shipmentID) {
         String sql = "SELECT 1 FROM Shipment WHERE shipmentID = ?";

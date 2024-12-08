@@ -23,16 +23,19 @@ public class AdminDAO {
     }
 
     public void addUser(User user) {
-        String sql = "INSERT INTO Users (name, role, credentials) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO Users (name, role, credentials, contactNumber, address) VALUES (?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, user.getName());
             stmt.setString(2, user.getRole());
             stmt.setString(3, user.getCredentials());
+            stmt.setString(4, user.getContactNumber());
+            stmt.setString(5, user.getAddress());
             stmt.executeUpdate();
             System.out.println("User added successfully.");
         } catch (SQLException e) {
             e.printStackTrace();
         }
+
     }
 
     public boolean userExists(int userID) {
@@ -59,7 +62,9 @@ public class AdminDAO {
                 String name = rs.getString("name");
                 String role = rs.getString("role");
                 String credentials = rs.getString("credentials");
-                User user = new User(userID, name, role, credentials);
+                String contactNumber = rs.getString("contactNumber");
+                String address = rs.getString("address");
+                User user = new User(userID, name, role, credentials, contactNumber, address);
                 users.add(user);
             }
         } catch (SQLException e) {

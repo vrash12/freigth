@@ -1,15 +1,16 @@
 package view;
 
 import model.User;
-import java.util.Scanner;
-import java.util.List;
 import model.Bus;
 import model.Route;
-import dao.RouteDAO;
 import model.Shipment;
 import model.Branch;
 import model.Sender;
 import model.Receiver;
+
+import dao.RouteDAO;
+import java.util.List;
+import java.util.Scanner;
 
 public class AdminView {
     private Scanner scanner;
@@ -17,6 +18,7 @@ public class AdminView {
     public AdminView() {
         scanner = new Scanner(System.in);
     }
+
     public void clearScreen() {
         System.out.print("\033[H\033[2J");
         System.out.flush();
@@ -28,6 +30,21 @@ public class AdminView {
         return choice;
     }
 
+    public void displayMenu() {
+        clearScreen();
+        System.out.println("--- Admin Dashboard ---");
+        System.out.println("1. User Management");
+        System.out.println("2. Bus Management");
+        System.out.println("3. Route Management");
+        System.out.println("4. Shipment Management");
+        System.out.println("5. Branch Management");
+        System.out.println("6. Exit");
+        System.out.print("Please select an option: ");
+    }
+
+    // ---------------------
+    // USER MANAGEMENT
+    // ---------------------
     public void displayUserManagementMenu() {
         System.out.println("--- User Management ---");
         System.out.println("a. Add User");
@@ -39,6 +56,10 @@ public class AdminView {
     }
 
     public void displayUsers(List<User> users) {
+        if (users.isEmpty()) {
+            System.out.println("No users available.");
+            return;
+        }
         System.out.println("---- Current Users ----");
         for (User user : users) {
             System.out.println("UserID: " + user.getUserID() + ", Name: " + user.getName() + ", Role: " + user.getRole());
@@ -55,24 +76,66 @@ public class AdminView {
     public User getUserDetails() {
         System.out.print("Enter name: ");
         String name = scanner.nextLine();
-        System.out.print("Enter role: ");
-        String role = scanner.nextLine();
+        String role = selectRole("Select role:");
         System.out.print("Enter credentials: ");
         String credentials = scanner.nextLine();
-        return new User(0, name, role, credentials);
+        System.out.print("Enter contact number: ");
+        String contactNumber = scanner.nextLine();
+        System.out.print("Enter address: ");
+        String address = scanner.nextLine();
+
+        return new User(0, name, role, credentials, contactNumber, address);
+
     }
 
-    public int getUserID() {
-        System.out.print("Enter User ID: ");
-        return scanner.nextInt();
-    }
-
-    public String getRole() {
-        System.out.print("Enter new role: ");
-        String role = scanner.nextLine();
+    private String selectRole(String prompt) {
+        int roleChoice = 0;
+        String role = "";
+        while (true) {
+            System.out.println(prompt);
+            System.out.println("[1] Sender");
+            System.out.println("[2] Receiver");
+            System.out.print("Enter choice: ");
+            if (scanner.hasNextInt()) {
+                roleChoice = scanner.nextInt();
+                scanner.nextLine(); // consume newline
+                if (roleChoice == 1) {
+                    role = "Sender";
+                    break;
+                } else if (roleChoice == 2) {
+                    role = "Receiver";
+                    break;
+                } else {
+                    System.out.println("Invalid choice, please try again.");
+                }
+            } else {
+                System.out.println("Invalid input, please enter a number.");
+                scanner.nextLine(); // consume invalid input
+            }
+        }
         return role;
     }
 
+    public int getUserID(List<User> users) {
+        if (users.isEmpty()) {
+            System.out.println("No users available.");
+            return -1;
+        }
+        displayUsers(users);
+        System.out.print("Enter User ID: ");
+        int userID = scanner.nextInt();
+        scanner.nextLine();
+        return userID;
+    }
+
+    public String getRole() {
+        // Role selection with menu when assigning a new role
+        return selectRole("Select new role:");
+    }
+
+    // ---------------------
+    // BUS MANAGEMENT
+    // ---------------------
     public void displayBusManagementMenu() {
         System.out.println("--- Bus Management ---");
         System.out.println("a. Add Bus");
@@ -108,23 +171,12 @@ public class AdminView {
         return new Bus(0, capacity, routeID, currentStatus, driver);
     }
 
-    public int getBusID() {
-        System.out.print("Enter Bus ID: ");
-        return scanner.nextInt();
-    }
-
-    public int getNewCapacity() {
-        System.out.print("Enter new capacity: ");
-        return scanner.nextInt();
-    }
-
-    public String getNewRoute() {
-        System.out.print("Enter new route: ");
-        return scanner.nextLine();
-    }
-
-    public void displayBuses(List<Bus> buses, RouteDAO routeDAO) {
-        System.out.println("---- All Buses ----");
+    public void displayAvailableBuses(List<Bus> buses, RouteDAO routeDAO) {
+        if (buses.isEmpty()) {
+            System.out.println("No buses available.");
+            return;
+        }
+        System.out.println("---- Available Buses ----");
         for (Bus bus : buses) {
             String routeInfo = "No route assigned";
             if (bus.getRouteID() > 0) {
@@ -141,9 +193,35 @@ public class AdminView {
                     + ", Status: " + bus.getCurrentStatus()
                     + ", Driver: " + bus.getDriver());
         }
-        System.out.println("-------------------");
+        System.out.println("-------------------------");
     }
 
+    public int getBusID(List<Bus> buses, RouteDAO routeDAO) {
+        if (buses.isEmpty()) {
+            System.out.println("No buses available.");
+            return -1;
+        }
+        displayAvailableBuses(buses, routeDAO);
+        System.out.print("Enter Bus ID: ");
+        int busID = scanner.nextInt();
+        scanner.nextLine();
+        return busID;
+    }
+
+    public int getNewCapacity() {
+        System.out.print("Enter new capacity: ");
+        return scanner.nextInt();
+    }
+
+    public String getNewRoute() {
+        System.out.print("Enter new route: ");
+        scanner.nextLine(); // consume any leftover newline
+        return scanner.nextLine();
+    }
+
+    // ---------------------
+    // ROUTE MANAGEMENT
+    // ---------------------
     public void displayRouteManagementMenu() {
         System.out.println("--- Route Management ---");
         System.out.println("a. Add Route");
@@ -171,56 +249,6 @@ public class AdminView {
         return new Route(0, startLocation, endLocation, distance);
     }
 
-    public int getRouteID() {
-        System.out.print("Enter Route ID: ");
-        int routeID = scanner.nextInt();
-        scanner.nextLine();
-        return routeID;
-    }
-
-    public double getNewDistance() {
-        System.out.print("Enter new distance (in km): ");
-        double distance = scanner.nextDouble();
-        scanner.nextLine();
-        return distance;
-    }
-
-    public void displayRoutes(List<Route> routes) {
-        System.out.println("---- All Routes ----");
-        for (Route route : routes) {
-            System.out.println("RouteID: " + route.getRouteID()
-                    + ", Start: " + route.getStartLocation()
-                    + ", End: " + route.getEndLocation()
-                    + ", Distance: " + route.getDistance() + " km");
-        }
-        System.out.println("--------------------");
-    }
-
-    public void displayAvailableBuses(List<Bus> buses, RouteDAO routeDAO) {
-        if (buses.isEmpty()) {
-            System.out.println("No buses available.");
-            return;
-        }
-        System.out.println("---- Available Buses ----");
-        for (Bus bus : buses) {
-            String routeInfo = "No route assigned";
-            if (bus.getRouteID() > 0) {
-                Route route = routeDAO.getRouteByID(bus.getRouteID());
-                if (route != null) {
-                    routeInfo = route.getStartLocation() + " to " + route.getEndLocation();
-                } else {
-                    routeInfo = "Route ID " + bus.getRouteID() + " not found";
-                }
-            }
-            System.out.println("BusID: " + bus.getBusID()
-                    + ", Capacity: " + bus.getCapacity()
-                    + ", Route: " + routeInfo
-                    + ", Status: " + bus.getCurrentStatus()
-                    + ", Driver: " + bus.getDriver());
-        }
-        System.out.println("-------------------------");
-    }
-
     public void displayAvailableRoutes(List<Route> routes) {
         if (routes.isEmpty()) {
             System.out.println("No routes available.");
@@ -236,13 +264,41 @@ public class AdminView {
         System.out.println("--------------------------");
     }
 
+    public int getRouteID(List<Route> routes) {
+        if (routes.isEmpty()) {
+            System.out.println("No routes available.");
+            return -1;
+        }
+        displayAvailableRoutes(routes);
+        System.out.print("Enter Route ID: ");
+        int routeID = scanner.nextInt();
+        scanner.nextLine();
+        return routeID;
+    }
+
+    public double getNewDistance() {
+        System.out.print("Enter new distance (in km): ");
+        double distance = scanner.nextDouble();
+        scanner.nextLine();
+        return distance;
+    }
+
+    // ---------------------
+    // SHIPMENT MANAGEMENT
+    // ---------------------
     public void displayShipmentManagementMenu() {
         System.out.println("--- Shipment Management ---");
         System.out.println("a. Create Shipment");
         System.out.println("b. Update Shipment Status");
         System.out.println("c. Show All Shipments");
         System.out.println("d. Back to Main Menu");
+        System.out.println("e. Track Shipment by Tracking Number");
         System.out.print("Please select an option: ");
+    }
+
+    public String getTrackingNumberInput() {
+        System.out.print("Enter Tracking Number: ");
+        return scanner.nextLine();
     }
 
     public char getShipmentManagementChoice() {
@@ -261,18 +317,6 @@ public class AdminView {
         double cost = 0.0;
 
         return new Shipment(0, senderID, receiverID, busID, branchID, weight, dimensions, status, cost);
-    }
-
-    public int getShipmentID() {
-        System.out.print("Enter Shipment ID: ");
-        int shipmentID = scanner.nextInt();
-        scanner.nextLine();
-        return shipmentID;
-    }
-
-    public String getNewShipmentStatus() {
-        System.out.print("Enter new shipment status: ");
-        return scanner.nextLine();
     }
 
     public void displayShipments(List<Shipment> shipments) {
@@ -295,6 +339,21 @@ public class AdminView {
         System.out.println("-----------------------");
     }
 
+    public int getShipmentID(List<Shipment> shipments) {
+        if (shipments.isEmpty()) {
+            System.out.println("No shipments available.");
+            return -1;
+        }
+        displayShipments(shipments);
+        System.out.print("Enter Shipment ID: ");
+        int shipmentID = scanner.nextInt();
+        scanner.nextLine();
+        return shipmentID;
+    }
+
+    // ---------------------
+    // BRANCH MANAGEMENT
+    // ---------------------
     public void displayBranchManagementMenu() {
         System.out.println("--- Branch Management ---");
         System.out.println("a. Add Branch");
@@ -335,13 +394,6 @@ public class AdminView {
         return new Branch(branchID, branchName, location, contactNumber, managerName);
     }
 
-    public int getBranchID() {
-        System.out.print("Enter Branch ID: ");
-        int branchID = scanner.nextInt();
-        scanner.nextLine();
-        return branchID;
-    }
-
     public void displayBranches(List<Branch> branches) {
         if (branches.isEmpty()) {
             System.out.println("No branches available.");
@@ -358,18 +410,21 @@ public class AdminView {
         System.out.println("----------------------");
     }
 
-    public void displayMenu() {
-        clearScreen();
-        System.out.println("--- Admin Dashboard ---");
-        System.out.println("1. User Management");
-        System.out.println("2. Bus Management");
-        System.out.println("3. Route Management");
-        System.out.println("4. Shipment Management");
-        System.out.println("5. Branch Management");
-        System.out.println("6. Exit");
-        System.out.print("Please select an option: ");
+    public int getBranchID(List<Branch> branches) {
+        if (branches.isEmpty()) {
+            System.out.println("No branches available.");
+            return -1;
+        }
+        displayBranches(branches);
+        System.out.print("Enter Branch ID: ");
+        int branchID = scanner.nextInt();
+        scanner.nextLine();
+        return branchID;
     }
 
+    // ---------------------
+    // SENDER & RECEIVER
+    // ---------------------
     public void displayAvailableSenders(List<Sender> senders) {
         if (senders.isEmpty()) {
             System.out.println("No senders available.");
@@ -383,6 +438,18 @@ public class AdminView {
                     + ", Address: " + sender.getAddress());
         }
         System.out.println("---------------------------");
+    }
+
+    public int getSenderID(List<Sender> senders) {
+        if (senders.isEmpty()) {
+            System.out.println("No senders available.");
+            return -1;
+        }
+        displayAvailableSenders(senders);
+        System.out.print("Enter Sender ID: ");
+        int senderID = scanner.nextInt();
+        scanner.nextLine();
+        return senderID;
     }
 
     public void displayAvailableReceivers(List<Receiver> receivers) {
@@ -400,31 +467,20 @@ public class AdminView {
         System.out.println("------------------------------");
     }
 
-    public void displayAvailableBranches(List<Branch> branches) {
-        if (branches.isEmpty()) {
-            System.out.println("No branches available.");
-            return;
+    public int getReceiverID(List<Receiver> receivers) {
+        if (receivers.isEmpty()) {
+            System.out.println("No receivers available.");
+            return -1;
         }
-        System.out.println("---- Available Branches ----");
-        for (Branch branch : branches) {
-            System.out.println("BranchID: " + branch.getBranchID()
-                    + ", Name: " + branch.getBranchName()
-                    + ", Location: " + branch.getLocation());
-        }
-        System.out.println("-----------------------------");
-    }
-
-    public int getSenderID() {
-        System.out.print("Enter Sender ID: ");
-        int senderID = scanner.nextInt();
-        scanner.nextLine();
-        return senderID;
-    }
-
-    public int getReceiverID() {
+        displayAvailableReceivers(receivers);
         System.out.print("Enter Receiver ID: ");
         int receiverID = scanner.nextInt();
         scanner.nextLine();
         return receiverID;
+    }
+
+    public String getNewShipmentStatus() {
+        System.out.print("Enter new status: ");
+        return scanner.nextLine();
     }
 }

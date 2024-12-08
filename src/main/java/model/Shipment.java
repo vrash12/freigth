@@ -1,4 +1,5 @@
 package model;
+import java.util.UUID;
 
 public class Shipment {
     private int shipmentID;
@@ -10,7 +11,7 @@ public class Shipment {
     private String dimensions; // Can be formatted as "LxWxH"
     private String status;
     private double cost;
-
+    private String trackingNumber;
     public Shipment() {}
 
     public Shipment(int shipmentID, int senderID, int receiverID, int busID, int branchID,
@@ -24,8 +25,22 @@ public class Shipment {
         this.dimensions = dimensions;
         this.status = status;
         this.cost = cost;
+        // Initialize tracking number if desired
+        this.trackingNumber = generateTrackingNumber();
+    }
+    public Shipment(int shipmentID, int senderID, int receiverID, int busID, int branchID,
+                    double weight, String dimensions, String status, double cost, String trackingNumber) {
+        this(shipmentID, senderID, receiverID, busID, branchID, weight, dimensions, status, cost);
+        this.trackingNumber = trackingNumber;
     }
 
+    public String getTrackingNumber() {
+        return trackingNumber;
+    }
+
+    public void setTrackingNumber(String trackingNumber) {
+        this.trackingNumber = trackingNumber;
+    }
     // Getters and Setters
     public int getShipmentID() {
         return shipmentID;
@@ -112,5 +127,11 @@ public class Shipment {
 
     public void updateStatus(String newStatus) {
         this.status = newStatus;
+    }
+
+    public String generateTrackingNumber() {
+        // Generate a unique tracking number
+        // For simplicity, use a UUID substring
+        return "TRK-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 }

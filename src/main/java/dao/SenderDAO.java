@@ -32,18 +32,18 @@ public class SenderDAO {
             e.printStackTrace();
         }
     }
-
     public List<Sender> getAllSenders() {
         List<Sender> senders = new ArrayList<>();
-        String sql = "SELECT * FROM Sender";
-        try (Statement stmt = connection.createStatement()) {
-            ResultSet rs = stmt.executeQuery(sql);
+        String sql = "SELECT userID, name, contactNumber, address FROM Users WHERE role = 'Sender'";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                int customerID = rs.getInt("customerID");
+                int userID = rs.getInt("userID");
                 String name = rs.getString("name");
                 String contactNumber = rs.getString("contactNumber");
                 String address = rs.getString("address");
-                Sender sender = new Sender(customerID, name, contactNumber, address);
+                // Sender constructor: Sender(int customerID, String name, String contactNumber, String address)
+                Sender sender = new Sender(userID, name, contactNumber, address);
                 senders.add(sender);
             }
         } catch (SQLException e) {
@@ -53,16 +53,20 @@ public class SenderDAO {
     }
 
     public boolean senderExists(int customerID) {
-        String sql = "SELECT 1 FROM Sender WHERE customerID = ?";
+        String sql = "SELECT 1 FROM Users WHERE userID = ? AND role = 'Sender'";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, customerID);
             ResultSet rs = stmt.executeQuery();
-            return rs.next();
+            boolean exists = rs.next();
+            System.out.println("senderExists(" + customerID + ") returns " + exists);
+            return exists;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
     }
+
+
 
 
 
